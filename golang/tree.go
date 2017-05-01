@@ -1,59 +1,93 @@
 package algorithm
 
-type tree interface {
-	Add(interface{})
+type Tree interface {
+	Add(interface{}) interface{}
 	Remove(interface{})
+	Find(interface{}) interface{}
 }
 
 type BinarySearchTree struct {
-	Nodes []*TreeNode
+	Root *TreeNode
 }
 type TreeNode struct {
 	Value int
+	Left  *TreeNode
+	Right *TreeNode
 }
 
-func (bst *BinarySearchTree) Contains(elt int) bool {
-	i := 0
-	l := len(bst.Nodes)
-	var node *TreeNode
-	for i < l {
-		node = bst.Nodes[i]
+// Returns TreeNode element pointer, or nil
+func (bst *BinarySearchTree) Find(elt int) *TreeNode {
+	node := bst.Root
+	for {
 		if node == nil {
-			return false
+			break
 		} else if node.Value == elt {
-			return true
+			return node
 		} else if node.Value < elt {
-			i = i*2 + 2
+			node = node.Right
 		} else {
-			i = i*2 + 1
+			node = node.Left
 		}
 	}
 
-	return false
+	return nil
 }
 
 func (bst *BinarySearchTree) Add(elt int) {
-	i := 0
-	l := len(bst.Nodes)
-	var node *TreeNode
+	node := bst.Root
+	newNode := &TreeNode{elt, nil, nil}
 
-	for i < l {
-		node = bst.Nodes[i]
-		if node == nil {
-			break
-		} else if elt < node.Value {
-			i = i*2 + 1
+	if node == nil {
+		bst.Root = newNode
+		return
+	}
+
+	for {
+		if elt < node.Value {
+			if node.Left == nil {
+				node.Left = newNode
+				return
+			}
+			node = node.Left
 		} else {
-			i = i*2 + 2
+			if node.Right == nil {
+				node.Right = newNode
+				return
+			}
+			node = node.Right
+		}
+	}
+}
+
+func (bst *BinarySearchTree) Remove(elt int) {
+	node := bst.Find(elt)
+	setRoot := false
+	if node == bst.Root {
+		setRoot = true
+	}
+
+	if node != nil {
+		if node.Left != nil && node.Right != nil {
+			prevNode := node
+			leftMost := node.Right
+			for {
+				if leftMost.Left == nil {
+					break
+				}
+				prevNode = leftMost
+				leftMost = leftMost.Left
+			}
+
+			prevNode.Left = leftMost.Right
+			node.Value = leftMost.Value
+		} else if node.Left == nil {
+			node = node.Right
+		} else {
+			node = node.Left
 		}
 	}
 
-	c := cap(bst.Nodes)
-	if i >= c {
-		nodes := make([]*TreeNode, 4*(c+1))
-		copy(nodes, bst.Nodes)
-		bst.Nodes = nodes
+	if setRoot {
+		bst.Root = node
 	}
-
-	bst.Nodes[i] = &TreeNode{elt}
 }
